@@ -14,6 +14,7 @@ export const createSkill = async (req, res) => {
     }
 
     const newSkill = { ...req.body };
+    console.log(newSkill)
     if (req.file) {
         const imageUrl = formatImage(req.file);
         const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);

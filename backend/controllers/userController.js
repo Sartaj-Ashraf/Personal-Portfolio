@@ -28,6 +28,7 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await PortfolioUserModel.findOne({ email: req.body.email });
+    console.log(user)
     if (!user) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "User not found" });
     }
@@ -35,7 +36,7 @@ export const loginUser = async (req, res) => {
     if (!isMatch) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid password" });
     }
-    const token = generateJWTToken({ id: user._id });
+    const token = generateJWTToken({ userId: user._id.toString(), role: user.role });
     res.cookie("token", token, {
         httpOnly: true,
         secure: true,
