@@ -20,7 +20,8 @@ import path, { dirname } from "path";
 import { fileURLToPath } from "url";
 
 import userRouter from "./routes/userRouter.js";
-
+import errorHandlerMiddleware from "./middleware/errorhandlerMiddleware.js";
+import contactQueryRouter from "./routes/contactQueryRouter.js";
 
 // cloudinary setup
 cloudinary.config({
@@ -30,9 +31,8 @@ cloudinary.config({
 });
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-if (process.env.NODE_ENV === "devlopment") {
-    app.use(morgan("dev"));
-}
+app.use(morgan("dev"));
+
 app.use(express.static(path.resolve(__dirname, "./public")));
 app.use(express.json());
 app.use(cookieParser());
@@ -46,7 +46,9 @@ app.use(
 );
 
 app.use("/api/v1/auth", userRouter);
+app.use("/api/v1/contact-query", contactQueryRouter);
 
+app.use(errorHandlerMiddleware);
 
 //not found
 app.use("*", (req, res) => {
