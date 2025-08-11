@@ -23,6 +23,11 @@ const techstackSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    proficiencyLevel: {
+        type: String,
+        enum: ["Beginner", "Intermediate", "Advanced", "Expert"],
+        default: "Intermediate",
+    },
     keypoints: {
         type: [String],
         default: []
