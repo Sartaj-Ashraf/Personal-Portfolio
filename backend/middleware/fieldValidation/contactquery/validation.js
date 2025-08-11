@@ -17,9 +17,3 @@ export const validateContactQueryInput = withValidationErrors([
 ]);
 
 
-export const validateUpdateContactQueryInput = withValidationErrors([
-    body("*.name").notEmpty().withMessage("Name is required"),
-    body("*.phone_number").notEmpty().withMessage("Phone number is required"),
-    body("*.message").notEmpty().withMessage("Message is required"),
-]);
-

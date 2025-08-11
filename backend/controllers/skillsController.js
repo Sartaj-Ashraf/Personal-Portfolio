@@ -14,7 +14,6 @@ export const createSkill = async (req, res) => {
     }
 
     const newSkill = { ...req.body };
-    console.log(newSkill)
     if (req.file) {
         const imageUrl = formatImage(req.file);
         const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
@@ -107,5 +106,10 @@ export const deleteAllSkills = async (req, res) => {
     if (skills.deletedCount === 0) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "No skills found" });
     }
+    skills.forEach(skill => {
+        if (skill.imagePublicId) {
+            cloudinary.v2.uploader.destroy(skill.imagePublicId);
+        }
+    });
     res.status(StatusCodes.OK).json({ success: true, message: "All skills deleted successfully", skills });
 }
