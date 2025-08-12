@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 const techstackSchema = new mongoose.Schema({
-    name: {
+    title: {
         type: String,
         trim: true,
     },

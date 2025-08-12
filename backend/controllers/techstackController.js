@@ -5,8 +5,8 @@ import { getPaginationParams, getPaginationInfo } from "../utils/pagination.js";
 import cloudinary from "cloudinary";
 
 export const createTech = async (req, res) => {
-    const { name, } = req.body;
-    const existingTechStack = await Techstack.findOne({ name: { $regex: new RegExp(`^${name}$`, "i") } });
+    const { title, } = req.body;
+    const existingTechStack = await Techstack.findOne({ title: { $regex: new RegExp(`^${title}$`, "i") } });
     if (existingTechStack) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Techstack already exists" });
     }
@@ -27,7 +27,7 @@ export const getAllTech = async (req, res) => {
     const queryObject = {};
     if (search) {
         queryObject.$or = [
-            { name: { $regex: search, $options: "i" } },
+            { title: { $regex: search, $options: "i" } },
         ]
     }
     if (category) {

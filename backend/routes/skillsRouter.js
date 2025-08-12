@@ -2,6 +2,7 @@ import { Router } from "express"
 import { createSkill, deleteAllSkills, deleteSkill, getAllSkills, updateSkills } from "../controllers/skillsController.js";
 import { validateIdParam, validateCreateSkillInput } from "../middleware/fieldValidation/skills/validation.js";
 import { authenticateUser, authorizePermissions } from "../middleware/authMiddleware.js";
+
 import upload from "../middleware/multer.js";
 const router = Router()
 
