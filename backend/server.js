@@ -24,6 +24,7 @@ import errorHandlerMiddleware from "./middleware/errorhandlerMiddleware.js";
 import contactQueryRouter from "./routes/contactQueryRouter.js";
 import skillsRouter from "./routes/skillsRouter.js";
 import techstackRouter from "./routes/techstackRouter.js";
+import projectRouter from "./routes/projectRouter.js";
 
 // cloudinary setup
 cloudinary.config({
@@ -51,6 +52,7 @@ app.use("/api/v1/auth", userRouter);
 app.use("/api/v1/contact-query", contactQueryRouter);
 app.use("/api/v1/skills", skillsRouter);
 app.use("/api/v1/techstack", techstackRouter);
+app.use("/api/v1/project", projectRouter);
 
 app.use(errorHandlerMiddleware);
 
