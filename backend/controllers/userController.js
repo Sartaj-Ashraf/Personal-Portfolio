@@ -28,7 +28,6 @@ export const loginUser = async (req, res) => {
     }
 
     const user = await PortfolioUserModel.findOne({ email: req.body.email });
-    console.log(user)
     if (!user) {
         return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "User not found" });
     }

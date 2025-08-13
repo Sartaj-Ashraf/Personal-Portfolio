@@ -8,3 +8,4 @@ export const SKILL_CATEGORIES = [
     "Testing",
     "Other",
 ];
+
