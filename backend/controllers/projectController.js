@@ -177,7 +177,7 @@ export const getAllProjects = async (req, res) => {
 // @route   GET /api/projects/:id
 // @access  Public
 export const getProjectById = async (req, res) => {
-  try {
+
     const { id } = req.params;
 
     const project = await Project.findById(id).populate('techStack', 'name version icon');
@@ -190,19 +190,13 @@ export const getProjectById = async (req, res) => {
       success: true,
       data: project,
     });
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: error.message || "Server error",
-    });
-  }
 };
 
 // @desc    Update a project
 // @route   PUT /api/projects/:id
 // @access  Private
 export const updateProject = async (req, res) => {
-  try {
+
     const { id } = req.params;
     const {
       title,
@@ -294,19 +288,13 @@ export const updateProject = async (req, res) => {
       message: "Project updated successfully",
       data: updatedProject,
     });
-  } catch (error) {
-    res.status(error.statusCode || 500).json({
-      success: false,
-      message: error.message || "Server error",
-    });
-  }
+  
 };
 
 // @desc    Delete a project
 // @route   DELETE /api/projects/:id
 // @access  Private
 export const deleteProject = async (req, res) => {
-  try {
     const { id } = req.params;
 
     const project = await Project.findById(id);
@@ -328,12 +316,7 @@ export const deleteProject = async (req, res) => {
       success: true,
       message: "Project deleted successfully",
     });
-  } catch (error) {
-    res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: error.message || "Server error",
-    });
-  }
+
 };
 
 // @desc    Get projects by category

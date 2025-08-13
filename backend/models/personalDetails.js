@@ -35,9 +35,13 @@ const PersonalDetails = new mongoose.Schema({
         type: String,
     },
 
-    avatar: {
+    imageUrl: {
         type: String,
         default: 'https://i.ibb.co/default-avatar.png'
+    },
+    imagePublicId: {
+        type: String,
+        default: 'default-avatar'
     },
     bio: {
         type: String,
