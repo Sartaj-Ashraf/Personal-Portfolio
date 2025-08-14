@@ -422,25 +422,3 @@ export const getProjectStats = async (req, res) => {
     });
   }
 };
-
-// @desc    Get all available tech stacks
-// @route   GET /api/projects/techstacks
-// @access  Public
-export const getAvailableTechStacks = async (req, res) => {
-  try {
-    const techStacks = await Techstack.find()
-      .select('name version icon description')
-      .sort({ name: 1 })
-      .lean();
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: techStacks,
-    });
-  } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: error.message || "Server error",
-    });
-  }
-};

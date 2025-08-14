@@ -3,12 +3,16 @@ import { StatusCodes } from "http-status-codes";
 import { formatImage } from "../utils/multer.js";
 import { getPaginationParams, getPaginationInfo } from "../utils/pagination.js";
 import cloudinary from "cloudinary";
+import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 
+// @desc    Create a new techstack
+// @route   POST /api/techstack
+// @access  Private
 export const createTech = async (req, res) => {
     const { title, } = req.body;
     const existingTechStack = await Techstack.findOne({ title: { $regex: new RegExp(`^${title}$`, "i") } });
     if (existingTechStack) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Techstack already exists" });
+        throw new badRequestErr("Techstack already exists");
     }
 
     const newTechStack = { ...req.body };
@@ -22,6 +26,9 @@ export const createTech = async (req, res) => {
     res.status(StatusCodes.CREATED).json({ success: true, message: "Techstack created successfully", techStack });
 }
 
+// @desc    Get all techstacks
+// @route   GET /api/techstack
+// @access  Private
 export const getAllTech = async (req, res) => {
     const { search, category, proficiencyLevel, featured } = req.query;
     const queryObject = {};
@@ -50,11 +57,14 @@ export const getAllTech = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Techstacks fetched successfully", techStacks });
 }
 
+// @desc    Update a techstack
+// @route   PATCH /api/techstack/:id
+// @access  Private
 export const updateTech = async (req, res) => {
     const { id } = req.params;
     const existingTechStack = await Techstack.findById(id);
     if (!existingTechStack) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Techstack not found" });
+        throw new NotFoundErr("Techstack not found");
     }
     const newTechStack = { ...req.body };
     if (req.file) {
@@ -70,11 +80,14 @@ export const updateTech = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Techstack updated successfully", updatedTechStack });
 }
 
+// @desc    Delete a techstack
+// @route   DELETE /api/techstack/:id
+// @access  Private
 export const deleteTech = async (req, res) => {
     const { id } = req.params;
     const techStack = await Techstack.findByIdAndDelete(id);
     if (!techStack) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Techstack not found" });
+        throw new NotFoundErr("Techstack not found");
     }
     if (techStack.imagePublicId) {
         await cloudinary.v2.uploader.destroy(techStack.imagePublicId);
@@ -82,10 +95,13 @@ export const deleteTech = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Techstack deleted successfully", techStack });
 }
 
+// @desc    Delete all techstacks
+// @route   DELETE /api/techstack
+// @access  Private
 export const deleteAllTech = async (req, res) => {
     const techStacks = await Techstack.deleteMany();
     if (techStacks.deletedCount === 0) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "No techstacks found" });
+        throw new NotFoundErr("No techstacks found");
     }
     techStacks.forEach(techStack => {
         if (techStack.imagePublicId) {

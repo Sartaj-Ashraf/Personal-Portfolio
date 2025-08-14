@@ -3,14 +3,18 @@ import { StatusCodes } from "http-status-codes";
 import { formatImage } from "../utils/multer.js";
 import { getPaginationParams, getPaginationInfo } from "../utils/pagination.js";
 import cloudinary from "cloudinary";
+import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 
+// @desc    Create a new skill
+// @route   POST /api/skills
+// @access  Private
 export const createSkill = async (req, res) => {
     const { title } = req.body;// contains title, category, proficiencyLevel, yearsOfExperience, description, order, featured
 
     const existingSkill = await Skill.findOne({ title: { $regex: new RegExp(`^${title}$`, "i") } });
 
     if (existingSkill) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Skill already exists" });
+        throw new badRequestErr("Skill already exists");
     }
 
     const newSkill = { ...req.body };
@@ -25,6 +29,9 @@ export const createSkill = async (req, res) => {
 
 }
 
+// @desc    Get all skills
+// @route   GET /api/skills
+// @access  Private
 export const getAllSkills = async (req, res) => {
     const { search, category, proficiencyLevel, featured } = req.query;
 
@@ -65,12 +72,15 @@ export const getAllSkills = async (req, res) => {
         .json({ success: true, message: "Skills fetched successfully", skills });
 }
 
+// @desc    Update a skill
+// @route   PATCH /api/skills/:id
+// @access  Private
 export const updateSkills = async (req, res) => {
     const { id } = req.params;
     const existingSkill = await Skill.findById(id);
 
     if (!existingSkill) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Skill not found" });
+        throw new NotFoundErr("Skill not found");
     }
 
     const newSkill = { ...req.body };
@@ -90,21 +100,28 @@ export const updateSkills = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Skill updated successfully", updatedSkill });
 }
 
+// @desc    Delete a skill
+// @route   DELETE /api/skills/:id
+// @access  Private
 export const deleteSkill = async (req, res) => {
     const { id } = req.params;
     const skill = await Skill.findByIdAndDelete(id);
     if (!skill) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Skill not found" });
+        throw new NotFoundErr("Skill not found");
     }
     if (skill.imagePublicId) {
         await cloudinary.v2.uploader.destroy(skill.imagePublicId);
     }
     res.status(StatusCodes.OK).json({ success: true, message: "Skill deleted successfully", skill });
 }
+
+// @desc    Delete all skills
+// @route   DELETE /api/skills
+// @access  Private
 export const deleteAllSkills = async (req, res) => {
     const skills = await Skill.deleteMany();
     if (skills.deletedCount === 0) {
-        return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "No skills found" });
+        throw new NotFoundErr("No skills found");
     }
     skills.forEach(skill => {
         if (skill.imagePublicId) {

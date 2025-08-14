@@ -6,6 +6,8 @@ import { StatusCodes } from "http-status-codes";
 import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 import cloudinary from "cloudinary";
 
+// Schema Fields -  name,about,totalProjects(ref),totalTechStack(ref),username,email,phoneNumber,bio, jobTitle,location,company,social {github,linkedin,twitter,instagram},profileViews,lastLogin,isActive,imageUrl,imagePublicId,
+
 // @desc    Create a new profile
 // @route   POST /api/profile
 // @access  Private
@@ -17,7 +19,7 @@ export const createProfile = async (req, res) => {
         try {
             parsedTotalProjects = JSON.parse(totalProjects);
         } catch (error) {
-            throw new badRequestErr("Invalid techStack format");
+            throw new badRequestErr("Invalid projects format");
         }
     }
 
@@ -25,7 +27,7 @@ export const createProfile = async (req, res) => {
         try {
             parsedTotalTechStack = JSON.parse(totalTechStack);
         } catch (error) {
-            throw new badRequestErr("Invalid features format");
+            throw new badRequestErr("Invalid techStack format");
         }
     }
     // Validate techStack ObjectIds if provided
@@ -54,7 +56,6 @@ export const createProfile = async (req, res) => {
         totalTechStack: parsedTotalTechStack,
     });
 
-    console.log(newProfile);
     if (req.file) {
         const imageUrl = formatImage(req.file);
         const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
@@ -76,29 +77,22 @@ export const getProfile = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Profile fetched successfully", data: profile });
 };
 
+// @desc    Update a profile
+// @route   PATCH /api/profile/:id
+// @access  Private
 export const updateProfile = async (req, res) => {
     const { id } = req.params;
     const {
-        name,
-        about,
-        bio,
-        jobTitle,
-        location,
-        company,
-        phoneNumber,
-        username,
-        email,
         totalProjects,
         totalTechStack,
-        social,
-        profileViews,
-        lastLogin,
-        isActive
     } = req.body;
+
     const profile = await PersonalDetails.findById(id);
     if (!profile) {
         throw new NotFoundErr("Profile not found");
     }
+
+    let fieldsToUpdate = { ...req.body }
 
     let parsedTotalProjects = totalProjects;
     let parsedTotalTechStack = totalTechStack;
@@ -126,6 +120,8 @@ export const updateProfile = async (req, res) => {
 
         if (validTechStacks.length !== parsedTotalTechStack.length) {
             throw new badRequestErr("One or more techStack IDs are invalid");
+        } else {
+            fieldsToUpdate.totalTechStack = parsedTotalTechStack;
         }
     }
     if (parsedTotalProjects && parsedTotalProjects.length > 0) {
@@ -135,33 +131,20 @@ export const updateProfile = async (req, res) => {
 
         if (validProjects.length !== parsedTotalProjects.length) {
             throw new badRequestErr("One or more project IDs are invalid");
+        } else {
+            fieldsToUpdate.totalProjects = parsedTotalProjects;
         }
     }
 
     if (req.file) {
         const imageUrl = formatImage(req.file);
         const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
-        profile.imageUrl = imageResponse.secure_url;
-        profile.imagePublicId = imageResponse.public_id;
+        fieldsToUpdate.imageUrl = imageResponse.secure_url;
+        fieldsToUpdate.imagePublicId = imageResponse.public_id;
     }
-    if (profile.name !== undefined) profile.name = name;
-    if (profile.about !== undefined) profile.about = about;
-    if (profile.bio !== undefined) profile.bio = bio;
-    if (profile.jobTitle !== undefined) profile.jobTitle = jobTitle;
-    if (profile.location !== undefined) profile.location = location;
-    if (profile.company !== undefined) profile.company = company;
-    if (profile.phoneNumber !== undefined) profile.phoneNumber = phoneNumber;
-    if (profile.username !== undefined) profile.username = username;
-    if (profile.email !== undefined) profile.email = email;
-    if (profile.totalProjects !== undefined) profile.totalProjects = parsedTotalProjects;
-    if (profile.totalTechStack !== undefined) profile.totalTechStack = parsedTotalTechStack;
-    if (profile.social !== undefined) profile.social = social;
-    if (profile.profileViews !== undefined) profile.profileViews = profileViews;
-    if (profile.lastLogin !== undefined) profile.lastLogin = lastLogin;
-    if (profile.isActive !== undefined) profile.isActive = isActive;
-    await profile.save();
 
-    res.status(StatusCodes.OK).json({ success: true, message: "Profile updated successfully", profile });
+    fieldsToUpdate = await PersonalDetails.findByIdAndUpdate(id, fieldsToUpdate, { new: true });
+    res.status(StatusCodes.OK).json({ success: true, message: "Profile updated successfully", fieldsToUpdate });
 }
 
 // @desc    Delete a profile
