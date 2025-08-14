@@ -26,6 +26,7 @@ import skillsRouter from "./routes/skillsRouter.js";
 import techstackRouter from "./routes/techstackRouter.js";
 import projectRouter from "./routes/projectRouter.js";
 import profileRouter from "./routes/profileRouter.js";
+import experienceRouter from "./routes/experience.js";
 
 // cloudinary setup
 cloudinary.config({
@@ -55,6 +56,7 @@ app.use("/api/v1/skills", skillsRouter);
 app.use("/api/v1/techstack", techstackRouter);
 app.use("/api/v1/project", projectRouter);
 app.use("/api/v1/profile", profileRouter);
+app.use("/api/v1/experience", experienceRouter);
 
 app.use(errorHandlerMiddleware);
 

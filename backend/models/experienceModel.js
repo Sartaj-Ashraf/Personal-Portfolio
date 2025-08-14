@@ -20,6 +20,26 @@ const ExperienceSchema = new mongoose.Schema({
         enum: ['full-time', 'part-time', 'contract', 'freelance', 'internship', 'temporary'],
         default: 'full-time'
     },
+    companyWebsite: {
+        type: String,
+        trim: true
+    },
+    coverImage: {
+        type: String,
+        trim: true
+    },
+    coverImagePublicId: {
+        type: String,
+        trim: true
+    },
+    companyLogo: {
+        type: String,
+        trim: true
+    },
+    companyLogoPublicId: {
+        type: String,
+        trim: true
+    },
     startDate: {
         type: Date,
         required: true
