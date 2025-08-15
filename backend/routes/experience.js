@@ -1,20 +1,37 @@
 import { Router } from "express";
-import { createExperience, deleteExperience, getAllExperiences, updateExperience } from "../controllers/experienceController.js";
-// import { validateCreateProfileInput } from "../middleware/fieldValidation/profile/validation.js";
-import { authenticateUser, authorizePermissions } from "../middleware/authMiddleware.js";
+import {
+    createExperience,
+    deleteExperience,
+    getAllExperiences,
+    updateExperience
+} from "../controllers/experienceController.js";
+import {
+    authenticateUser,
+    authorizePermissions
+} from "../middleware/authMiddleware.js";
 import upload from "../middleware/multer.js";
-import { validateCreateExperienceInput, validateIdParam } from "../middleware/fieldValidation/experience/validation.js";
+import {
+    validateCreateExperienceInput,
+    validateIdParam
+} from "../middleware/fieldValidation/experience/validation.js";
+
 const router = Router();
 
+// Public route
 router.get("/get-experience", getAllExperiences);
-// router.get("/get-project/:id", getProjectById);
 
-// Authication and authorization
-router.use(authenticateUser)
-router.use(authorizePermissions("admin"))
+// Authentication & Authorization for the below routes
+router.use(authenticateUser);
+router.use(authorizePermissions("admin"));
 
-router.post("/", validateCreateExperienceInput, upload.single("coverImage"), upload.single("companyLogo"), createExperience);
-router.patch("/update-experience/:id", validateIdParam, upload.single("coverImage"), upload.single("companyLogo"), updateExperience);
+// Multer fields config for both images
+const experienceUploads = upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "companyLogo", maxCount: 1 }
+]);
+
+router.post("/", validateCreateExperienceInput, experienceUploads, createExperience);
+router.patch("/update-experience/:id", validateIdParam, experienceUploads, updateExperience);
 router.delete("/delete-experience/:id", validateIdParam, deleteExperience);
 
-export default router
+export default router;

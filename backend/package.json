@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "setup-project": "cd ../frontend && npm install && cd ../backend && npm install",
+    "setup-production-app": "cd ../frontend && npm install && npm run build && cd ../backend && npm install",
     "server": "nodemon server.js",
-    "dev": "npm run server"
+    "client": "cd ../frontend && npm run dev",
+    "dev": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\""
   },
   "dependencies": {
     "axios": "^1.9.0",

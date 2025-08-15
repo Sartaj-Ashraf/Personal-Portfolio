@@ -74,7 +74,7 @@ export const getProfile = async (req, res) => {
     if (!profile) {
         throw new NotFoundErr("No profile not found");
     }
-    res.status(StatusCodes.OK).json({ success: true, message: "Profile fetched successfully", data: profile });
+    res.status(StatusCodes.OK).json({ success: true, message: "Profile fetched successfully", profile });
 };
 
 // @desc    Update a profile

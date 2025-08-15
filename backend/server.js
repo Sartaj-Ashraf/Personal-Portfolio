@@ -51,10 +51,10 @@ app.use(
 );
 
 app.use("/api/v1/auth", userRouter);
-app.use("/api/v1/contact-query", contactQueryRouter);
+app.use("/api/v1/contact-queries", contactQueryRouter);
 app.use("/api/v1/skills", skillsRouter);
 app.use("/api/v1/techstack", techstackRouter);
-app.use("/api/v1/project", projectRouter);
+app.use("/api/v1/projects", projectRouter);
 app.use("/api/v1/profile", profileRouter);
 app.use("/api/v1/experience", experienceRouter);
 

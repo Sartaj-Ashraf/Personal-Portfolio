@@ -51,6 +51,13 @@ export const getContactQueries = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Contact queries fetched successfully", contactQueries });
 }
 
+// @desc    Get recent three contact queries
+// @route   GET /api/contact-query/get-recent-contact-queries
+// @access  Private
+export const getRecentThreeContactQueries = async (req, res) => {
+    const contactQueries = await ContactQueryModel.find().sort({ createdAt: -1 }).limit(3);
+    res.status(StatusCodes.OK).json({ success: true, message: "Recent contact queries fetched successfully", contactQueries });
+}
 // @desc    Update a contact query
 // @route   PATCH /api/contact-query/:id
 // @access  Private
