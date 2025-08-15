@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createExperience, deleteExperience, getAllExperiences } from "../controllers/experienceController.js";
+import { createExperience, deleteExperience, getAllExperiences, updateExperience } from "../controllers/experienceController.js";
 // import { validateCreateProfileInput } from "../middleware/fieldValidation/profile/validation.js";
 import { authenticateUser, authorizePermissions } from "../middleware/authMiddleware.js";
 
@@ -13,7 +13,7 @@ router.use(authenticateUser)
 router.use(authorizePermissions("admin"))
 
 router.post("/", createExperience);
-// router.patch("/update-experience/:id",  updateExperience);
+router.patch("/update-experience/:id", updateExperience);
 router.delete("/delete-experience/:id", deleteExperience);
 
 export default router
