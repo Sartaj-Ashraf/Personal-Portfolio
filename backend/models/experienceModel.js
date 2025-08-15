@@ -13,12 +13,14 @@ const ExperienceSchema = new mongoose.Schema({
     },
     location: {
         type: String,
+        enum: ['remote', 'on-site', "hybrid", "other"],
+        default: 'remote',
         trim: true
     },
     employmentType: {
         type: String,
-        enum: ['full-time', 'part-time', 'contract', 'freelance', 'internship', 'temporary'],
-        default: 'full-time'
+        enum: ['full-time', 'part-time', 'contract', 'freelance', 'internship', 'temporary', 'other'],
+        default: 'other'
     },
     companyWebsite: {
         type: String,
