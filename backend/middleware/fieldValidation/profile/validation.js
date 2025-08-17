@@ -17,4 +17,3 @@ export const validateCreateProfileInput = withValidationErrors([
     body("*.username").notEmpty().withMessage("Username is required"),
 ]);
 
-

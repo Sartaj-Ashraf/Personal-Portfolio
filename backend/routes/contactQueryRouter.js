@@ -5,14 +5,14 @@ import { authenticateUser, authorizePermissions } from "../middleware/authMiddle
 
 const router = Router();
 
-router.post("/",validateContactQueryInput, createContactQuery);
-router.get("/get-all-contact-queries", getContactQueries);
-router.get("/get-recent-contact-queries", getRecentThreeContactQueries);
 
+router.post("/",validateContactQueryInput, createContactQuery);
 
 router.use(authenticateUser)
 router.use(authorizePermissions("admin"))
 
+router.get("/get-all-contact-queries", getContactQueries);
+router.get("/get-recent-contact-queries", getRecentThreeContactQueries);
 router.patch("/update-contact-query/:id", validateIdParam, updateContactQuery);
 router.delete("/delete-contact-query/:id", validateIdParam, deleteContactQuery);
 router.delete("/delete-all-contact-queries", deleteAllContactQueries);

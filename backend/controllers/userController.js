@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import { comparePassword, hashpasword } from "../utils/passwordUtils.js";
 import { generateJWTToken } from "../utils/tokenUtils.js";
 import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
+const TOKEN_EXPIRE_IN = 24 * 60 * 60 * 1000;
 
 // @desc    Register a new user
 // @route   POST /api/users/register
@@ -31,10 +32,6 @@ export const registerUser = async (req, res) => {
 // @route   POST /api/users/login
 // @access  Public
 export const loginUser = async (req, res) => {
-    if (!req.body.email || !req.body.password) {
-        throw new badRequestErr("email and password fields are required");
-    }
-
     const user = await PortfolioUserModel.findOne({ email: req.body.email });
     if (!user) {
         throw new NotFoundErr("User not found");
@@ -44,12 +41,14 @@ export const loginUser = async (req, res) => {
         throw new badRequestErr("Invalid password or email");
     }
     const token = generateJWTToken({ userId: user._id.toString(), role: user.role });
+    const oneDay = 1000 * 60 * 60 * 24;
+    console.log({ token, userId: user._id.toString(), role: user.role });
     res.cookie("token", token, {
         httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        maxAge: process.env.JWT_EXPIRE,
+        expires: new Date(Date.now() + oneDay),
+        secure: process.env.NODE_ENV == "production",
     });
+    console.log({ cookies: res.cookie });
     res.status(StatusCodes.OK).json({ success: true, message: "User logged in successfully", user });
 }
 

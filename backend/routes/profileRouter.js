@@ -11,7 +11,7 @@ router.get("/get-profile", getProfile);
 router.use(authenticateUser)
 router.use(authorizePermissions("admin"))
 
-router.post("/", validateCreateProfileInput, createProfile);
+router.post("/", createProfile);
 router.patch("/update-profile/:id", validateIdParam, updateProfile);
 router.delete("/delete-profile/:id", validateIdParam, deleteProfile);
 
