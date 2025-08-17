@@ -1,13 +1,13 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { profileAPI, contentAPI } from "@/lib/api";
+import { profileAPI, contentAPI ,porjectAPI} from "@/lib/api";
 
 export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      const response = await contentAPI.getProjects();
+      const response = await porjectAPI.getProjects();
       return response.data;
     },
   });

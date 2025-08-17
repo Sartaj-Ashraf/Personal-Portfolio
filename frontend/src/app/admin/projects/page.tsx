@@ -20,7 +20,6 @@ export default function AdminProjectsPage() {
           </Button>
         }
       />
-
       <ProjectsTable />
     </div>
   );

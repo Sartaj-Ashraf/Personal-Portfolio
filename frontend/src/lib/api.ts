@@ -79,16 +79,6 @@ export const contentAPI = {
     }),
   deleteSkill: (id: string) => api.delete(`/skills/delete-skill/${id}`),
 
-  // Projects
-  getProjects: () => api.get("/projects/get-all-projects"),
-  getProject: (id: string) => api.get(`/projects/get-project/${id}`),
-  createProject: (data: any) => api.post("/projects", data),
-  updateProject: (id: string, data: any) =>
-    api.patch(`/projects/update-project/${id}`, data),
-  deleteProject: (id: string) => api.delete(`/projects/delete-project/${id}`),
-
-
-
   // Experience
   getExperiences: () => api.get("/experience/get-all-experiences"),
   getExperienceById: (id: string) =>
@@ -122,13 +112,33 @@ export const contentAPI = {
 export const profileAPI = {
   getProfile: () => api.get("/profile/get-profile"),
   getProfileById: (id: string) => api.get(`/profile/get-profile-by-id/${id}`),
+
   createProfile: (data: any) =>
     api.post("/profile", data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+
   updateProfile: (id: string, data: any) =>
     api.patch(`/profile/update-profile/${id}`, data, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+
   deleteProfile: (id: string) => api.delete(`/profile/delete-profile/${id}`),
+};
+
+export const porjectAPI = {
+  getProjects: () => api.get("/projects/get-all-projects"),
+  getProjectById: (id: string) => api.get(`/projects/get-project-by-id/${id}`),
+
+  createProject: (data: any) =>
+    api.post("/projects", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  updateProject: (id: string, data: any) =>
+    api.patch(`/projects/update-project/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
+  deleteProject: (id: string) => api.delete(`/projects/delete-project/${id}`),
 };

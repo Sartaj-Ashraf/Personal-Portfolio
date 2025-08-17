@@ -1,32 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { contentAPI } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
-import { useTechStack } from "@/hooks/use-portfolio-data"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Loader2, X, Plus } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { porjectAPI } from "@/lib/api";
+import { toast, useToast } from "@/hooks/use-toast";
+import { useTechStack } from "@/hooks/use-portfolio-data";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, X, Plus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ProjectFormProps {
-  project?: any
-  isEdit?: boolean
+  project?: any;
+  isEdit?: boolean;
 }
 
 export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
+  console.log({ projectIs: project, isEdit });
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    category: "",
+    category: "other",
     status: "Planning",
     techStack: [] as string[],
     features: [] as string[],
@@ -34,14 +41,13 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
     endDate: "",
     githubRepo: "",
     liveDemo: "",
-  })
-  const [newFeature, setNewFeature] = useState("")
-  const [loading, setLoading] = useState(false)
+  });
+  const [newFeature, setNewFeature] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const router = useRouter()
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const { data: techStack } = useTechStack()
+  const router = useRouter();
+  const { toast } = useToast();
+  const { data: techStack } = useTechStack();
 
   // Initialize form with project data if editing
   useEffect(() => {
@@ -49,102 +55,110 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
       setFormData({
         title: project.title || "",
         description: project.description || "",
-        category: project.category || "",
+        category: project.category || "other",
         status: project.status || "Planning",
         techStack: project.techStack?.map((tech: any) => tech._id) || [],
         features: project.features || [],
-        startDate: project.startDate ? new Date(project.startDate).toISOString().split("T")[0] : "",
-        endDate: project.endDate ? new Date(project.endDate).toISOString().split("T")[0] : "",
+        startDate: project.startDate
+          ? new Date(project.startDate).toISOString().split("T")[0]
+          : "",
+        endDate: project.endDate
+          ? new Date(project.endDate).toISOString().split("T")[0]
+          : "",
         githubRepo: project.githubRepo || "",
         liveDemo: project.liveDemo || "",
-      })
+      });
     }
-  }, [project, isEdit])
+  }, [project, isEdit]);
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => contentAPI.createProject(data),
+    mutationFn: (data: any) => porjectAPI.createProject(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
       toast({
         title: "Success",
         description: "Project created successfully",
-      })
-      router.push("/admin/projects")
+      });
+      router.push("/admin/projects");
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to create project",
+        description:
+          error.response?.data?.message || "Failed to create project",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => contentAPI.updateProject(project._id, data),
+    mutationFn: (data: any) => porjectAPI.updateProject(project._id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] })
       toast({
         title: "Success",
         description: "Project updated successfully",
-      })
-      router.push("/admin/projects")
+      });
+      router.push("/admin/projects");
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update project",
+        description:
+          error.response?.data?.message || "Failed to update project",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
+
+  console.log({ formData });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       const submitData = {
         ...formData,
-        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        startDate: formData.startDate
+          ? new Date(formData.startDate)
+          : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
-      }
+      };
 
       if (isEdit) {
-        updateMutation.mutate(submitData)
+        updateMutation.mutate(submitData);
       } else {
-        createMutation.mutate(submitData)
+        createMutation.mutate(submitData);
       }
     } catch (error) {
       // Error handled by mutations
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const addFeature = () => {
     if (newFeature.trim()) {
       setFormData((prev) => ({
         ...prev,
         features: [...prev.features, newFeature.trim()],
-      }))
-      setNewFeature("")
+      }));
+      setNewFeature("");
     }
-  }
+  };
 
   const removeFeature = (index: number) => {
     setFormData((prev) => ({
       ...prev,
       features: prev.features.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const toggleTechStack = (techId: string) => {
     setFormData((prev) => ({
@@ -152,8 +166,8 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
       techStack: prev.techStack.includes(techId)
         ? prev.techStack.filter((id) => id !== techId)
         : [...prev.techStack, techId],
-    }))
-  }
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -188,19 +202,34 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
-              <Input
-                id="category"
+              <Label htmlFor="category">Category</Label>
+              <Select
                 value={formData.category}
-                onChange={(e) => handleChange("category", e.target.value)}
-                placeholder="e.g., Web Development, Mobile App"
-                required
-              />
+                onValueChange={(value) => handleChange("category", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Web Development">Web Development</SelectItem>
+                  <SelectItem value="Mobile App">Mobile App</SelectItem>
+                  <SelectItem value="AI/ML">AI/ML</SelectItem>
+                  <SelectItem value="Open Source">Open Source</SelectItem>
+                  <SelectItem value="e-commerce">e-commerce</SelectItem>
+                  <SelectItem value="crm">crm</SelectItem>
+                  <SelectItem value="cms">cms</SelectItem>
+                  <SelectItem value="inventory">inventory</SelectItem>
+                  <SelectItem value="other">other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleChange("status", value)}>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => handleChange("status", value)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -301,7 +330,9 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
               value={newFeature}
               onChange={(e) => setNewFeature(e.target.value)}
               placeholder="Add a key feature"
-              onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addFeature())}
+              onKeyPress={(e) =>
+                e.key === "Enter" && (e.preventDefault(), addFeature())
+              }
             />
             <Button type="button" onClick={addFeature} variant="outline">
               <Plus className="h-4 w-4" />
@@ -329,7 +360,11 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
 
       {/* Submit Buttons */}
       <div className="flex justify-end space-x-4">
-        <Button type="button" variant="outline" onClick={() => router.push("/admin/projects")}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => router.push("/admin/projects")}
+        >
           Cancel
         </Button>
         <Button type="submit" disabled={loading}>
@@ -338,5 +373,5 @@ export function ProjectForm({ project, isEdit = false }: ProjectFormProps) {
         </Button>
       </div>
     </form>
-  )
+  );
 }

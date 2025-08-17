@@ -19,7 +19,7 @@ export const createProject = async (req, res) => {
   if (project) {
     throw new badRequestErr("Project already exists");
   }
-  project = { ...req.body }
+  let projectToCreate = { ...req.body }
 
 
   // Parse techStack and features if they're strings (from form data)
@@ -29,41 +29,43 @@ export const createProject = async (req, res) => {
   if (typeof techStack === 'string') {
     try {
       parsedTechStack = JSON.parse(techStack);
-      project.techStack = parsedTechStack
     } catch (error) {
       throw new badRequestErr("Invalid techStack format");
     }
   }
-
+  
   if (typeof features === 'string') {
     try {
       parsedFeatures = JSON.parse(features);
-      project.features = parsedFeatures
-
+      
     } catch (error) {
       throw new badRequestErr("Invalid features format");
     }
   }
-
+  
   // Validate techStack ObjectIds if provided
   if (parsedTechStack && parsedTechStack.length > 0) {
     const validTechStacks = await Techstack.find({
       _id: { $in: parsedTechStack }
     }).select('_id');
-
+    
     if (validTechStacks.length !== parsedTechStack.length) {
       throw new badRequestErr("One or more techStack IDs are invalid");
     }
   }
-
+  
   // Handle image uploads
   let projectImages = [];
   if (req.files && req.files.length > 0) {
     projectImages = await uploadImagesToCloudinary(req.files);
-    project.projectImages = projectImages
+    projectToCreate.projectImages = projectImages
   }
+  console.log(projectToCreate)
+  
+  projectToCreate.techStack = parsedTechStack
+  projectToCreate.features = parsedFeatures
 
-  project = await Project.create(project)
+  project = await Project.create(projectToCreate)
 
   res.status(StatusCodes.CREATED).json({
     success: true,
@@ -156,7 +158,6 @@ export const getProjectById = async (req, res) => {
 // @route   PUT /api/projects/:id
 // @access  Private
 export const updateProject = async (req, res) => {
-
   const { id } = req.params;
   const {
     techStack,
@@ -169,7 +170,9 @@ export const updateProject = async (req, res) => {
     throw new NotFoundErr("Project not found");
   }
 
-  project = { ...req.body };
+  // Create update object instead of replacing the entire project
+  let updateData = { ...req.body };
+
   // Parse techStack and features if they're strings
   let parsedTechStack = techStack;
   let parsedFeatures = features;
@@ -177,7 +180,7 @@ export const updateProject = async (req, res) => {
   if (typeof techStack === 'string') {
     try {
       parsedTechStack = JSON.parse(techStack);
-      project.techStack = parsedTechStack;
+      updateData.techStack = parsedTechStack;
     } catch (error) {
       throw new badRequestErr("Invalid techStack format");
     }
@@ -186,7 +189,7 @@ export const updateProject = async (req, res) => {
   if (typeof features === 'string') {
     try {
       parsedFeatures = JSON.parse(features);
-      project.features = parsedFeatures;
+      updateData.features = parsedFeatures;
     } catch (error) {
       throw new badRequestErr("Invalid features format");
     }
@@ -206,17 +209,18 @@ export const updateProject = async (req, res) => {
   // Handle new image uploads
   if (req.files && req.files.length > 0) {
     const newImages = await uploadImagesToCloudinary(req.files);
-    project.projectImages.push(...newImages);
+    // Add new images to existing ones
+    updateData.projectImages = [...project.projectImages, ...newImages];
   }
 
-  project = await Project.findByIdAndUpdate(id, project, { new: true })
+  // Update the project with the updateData
+  const updatedProject = await Project.findByIdAndUpdate(id, updateData, { new: true });
 
   res.status(StatusCodes.OK).json({
     success: true,
     message: "Project updated successfully",
-    project,
+    project: updatedProject,
   });
-
 };
 
 // @desc    Delete a project

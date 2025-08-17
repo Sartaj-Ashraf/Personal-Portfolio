@@ -4,17 +4,16 @@ const projectSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: true,
             trim: true,
         },
         description: {
             type: String,
-            required: true,
             trim: true,
         },
         category: {
             type: String, // e.g., "Web Development", "Mobile App", "AI/ML", "Open Source"
-            required: true,
+            enum: ["Web Development", "Mobile App", "AI/ML", "Open Source","e-commerce", "crm", "cms", "inventory", "other"],
+            default: "Web Development",
         },
         status: {
             type: String,
@@ -61,4 +60,4 @@ const projectSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-export default mongoose.model("PortfolioProject", projectSchema);
+export default mongoose.model("Project", projectSchema);
