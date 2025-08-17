@@ -1,20 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { contentAPI } from "@/lib/api"
-import { useProfile } from "@/hooks/use-portfolio-data"
-import { useToast } from "@/hooks/use-toast"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { contentAPI } from "@/lib/api";
+import { useProfile } from "@/hooks/use-portfolio-data";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export function ProfileForm() {
-  const { data: profile, isLoading } = useProfile()
+  const { data: { profile = {} } = {}, isLoading } = useProfile();
   const [formData, setFormData] = useState({
     name: "",
     about: "",
@@ -31,14 +32,18 @@ export function ProfileForm() {
       twitter: "",
       instagram: "",
     },
-  })
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
+    totalProjects: [] as string[], // ObjectIds
+    totalTechStack: [] as string[], // ObjectIds
+    isActive: true,
+  });
 
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize form with profile data
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Initialize form with existing profile
   useEffect(() => {
     if (profile) {
       setFormData({
@@ -57,220 +62,161 @@ export function ProfileForm() {
           twitter: profile.social?.twitter || "",
           instagram: profile.social?.instagram || "",
         },
-      })
+        totalProjects: profile.totalProjects || [],
+        totalTechStack: profile.totalTechStack || [],
+        isActive: profile.isActive ?? true,
+      });
     }
-  }, [profile])
+  }, [profile]);
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => {
       if (profile?._id) {
-        return contentAPI.updateProfile(profile._id, data)
+        return contentAPI.updateProfile(profile._id, data);
       } else {
-        return contentAPI.createProfile(data)
+        return contentAPI.createProfile(data);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] })
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: "Success",
         description: "Profile updated successfully",
-      })
+      });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to update profile",
         variant: "destructive",
-      })
+      });
     },
-  })
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const submitData = new FormData()
+      const submitData = new FormData();
 
-      // Append all form fields
+      // Append normal fields
       Object.entries(formData).forEach(([key, value]) => {
-        if (key === "social") {
-          submitData.append(key, JSON.stringify(value))
+        if (typeof value === "object") {
+          submitData.append(key, JSON.stringify(value));
         } else {
-          submitData.append(key, value.toString())
+          submitData.append(key, value.toString());
         }
-      })
+      });
 
       // Append image if selected
       if (imageFile) {
-        submitData.append("imageUrl", imageFile)
+        submitData.append("imageUrl", imageFile);
       }
 
-      updateMutation.mutate(submitData)
+      updateMutation.mutate(submitData);
     } catch (error) {
-      // Error handled by mutation
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleChange = (field: string, value: any) => {
     if (field.startsWith("social.")) {
-      const socialField = field.split(".")[1]
+      const socialField = field.split(".")[1];
       setFormData((prev) => ({
         ...prev,
-        social: {
-          ...prev.social,
-          [socialField]: value,
-        },
-      }))
+        social: { ...prev.social, [socialField]: value },
+      }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }))
+      setFormData((prev) => ({ ...prev, [field]: value }));
     }
-  }
+  };
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <div className="h-6 bg-muted rounded w-1/4 animate-pulse"></div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[...Array(3)].map((_, j) => (
-                <div key={j} className="space-y-2">
-                  <div className="h-4 bg-muted rounded w-1/6 animate-pulse"></div>
-                  <div className="h-10 bg-muted rounded animate-pulse"></div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
+    return <p>Loading...</p>;
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Personal & Professional Information */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Personal Information */}
+        {/* Personal Info */}
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                placeholder="Your full name"
-                required
-              />
-            </div>
+            <Input
+              id="name"
+              placeholder="Full Name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+            />
+            <Input
+              id="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={(e) => handleChange("username", e.target.value)}
+            />
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={(e) => handleChange("email", e.target.value)}
+            />
+            <Input
+              id="phoneNumber"
+              type="tel"
+              placeholder="Phone Number"
+              value={formData.phoneNumber}
+              onChange={(e) => handleChange("phoneNumber", e.target.value)}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="username">Username *</Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) => handleChange("username", e.target.value)}
-                placeholder="Your username"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange("email", e.target.value)}
-                placeholder="your.email@example.com"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Phone Number</Label>
-              <Input
-                id="phoneNumber"
-                type="tel"
-                value={formData.phoneNumber}
-                onChange={(e) => handleChange("phoneNumber", e.target.value)}
-                placeholder="+1 (555) 123-4567"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="image">Profile Image</Label>
-              <Input
-                id="image"
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-              />
-              {profile?.imageUrl && !imageFile && (
-                <p className="text-sm text-muted-foreground">Current image will be kept if no new image is selected</p>
-              )}
-            </div>
+            <Label htmlFor="image">Profile Image</Label>
+            <Input
+              id="image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            />
           </CardContent>
         </Card>
 
-        {/* Professional Information */}
+        {/* Professional Info */}
         <Card>
           <CardHeader>
             <CardTitle>Professional Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="jobTitle">Job Title</Label>
-              <Input
-                id="jobTitle"
-                value={formData.jobTitle}
-                onChange={(e) => handleChange("jobTitle", e.target.value)}
-                placeholder="e.g., Full Stack Developer"
-              />
-            </div>
+            <Input
+              id="jobTitle"
+              placeholder="Job Title"
+              value={formData.jobTitle}
+              onChange={(e) => handleChange("jobTitle", e.target.value)}
+            />
+            <Input
+              id="company"
+              placeholder="Company"
+              value={formData.company}
+              onChange={(e) => handleChange("company", e.target.value)}
+            />
+            <Input
+              id="location"
+              placeholder="Location"
+              value={formData.location}
+              onChange={(e) => handleChange("location", e.target.value)}
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                value={formData.company}
-                onChange={(e) => handleChange("company", e.target.value)}
-                placeholder="Your current company"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleChange("location", e.target.value)}
-                placeholder="City, Country"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={(e) => handleChange("bio", e.target.value)}
-                placeholder="Brief bio (max 300 characters)"
-                rows={3}
-                maxLength={300}
-              />
-              <p className="text-xs text-muted-foreground">{formData.bio.length}/300 characters</p>
-            </div>
+            <Textarea
+              id="bio"
+              placeholder="Bio (max 300 chars)"
+              value={formData.bio}
+              maxLength={300}
+              onChange={(e) => handleChange("bio", e.target.value)}
+            />
           </CardContent>
         </Card>
       </div>
@@ -281,16 +227,13 @@ export function ProfileForm() {
           <CardTitle>About</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="about">About Me</Label>
-            <Textarea
-              id="about"
-              value={formData.about}
-              onChange={(e) => handleChange("about", e.target.value)}
-              placeholder="Tell visitors about yourself, your background, and what you're passionate about..."
-              rows={6}
-            />
-          </div>
+          <Textarea
+            id="about"
+            rows={6}
+            placeholder="Tell visitors about yourself..."
+            value={formData.about}
+            onChange={(e) => handleChange("about", e.target.value)}
+          />
         </CardContent>
       </Card>
 
@@ -299,56 +242,57 @@ export function ProfileForm() {
         <CardHeader>
           <CardTitle>Social Links</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="github">GitHub</Label>
-              <Input
-                id="github"
-                type="url"
-                value={formData.social.github}
-                onChange={(e) => handleChange("social.github", e.target.value)}
-                placeholder="https://github.com/username"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="linkedin">LinkedIn</Label>
-              <Input
-                id="linkedin"
-                type="url"
-                value={formData.social.linkedin}
-                onChange={(e) => handleChange("social.linkedin", e.target.value)}
-                placeholder="https://linkedin.com/in/username"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="twitter">Twitter</Label>
-              <Input
-                id="twitter"
-                type="url"
-                value={formData.social.twitter}
-                onChange={(e) => handleChange("social.twitter", e.target.value)}
-                placeholder="https://twitter.com/username"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="instagram">Instagram</Label>
-              <Input
-                id="instagram"
-                type="url"
-                value={formData.social.instagram}
-                onChange={(e) => handleChange("social.instagram", e.target.value)}
-                placeholder="https://instagram.com/username"
-              />
-            </div>
-          </div>
+        <CardContent className="grid md:grid-cols-2 gap-4">
+          <Input
+            id="github"
+            placeholder="GitHub URL"
+            value={formData.social.github}
+            onChange={(e) => handleChange("social.github", e.target.value)}
+          />
+          <Input
+            id="linkedin"
+            placeholder="LinkedIn URL"
+            value={formData.social.linkedin}
+            onChange={(e) => handleChange("social.linkedin", e.target.value)}
+          />
+          <Input
+            id="twitter"
+            placeholder="Twitter URL"
+            value={formData.social.twitter}
+            onChange={(e) => handleChange("social.twitter", e.target.value)}
+          />
+          <Input
+            id="instagram"
+            placeholder="Instagram URL"
+            value={formData.social.instagram}
+            onChange={(e) => handleChange("social.instagram", e.target.value)}
+          />
         </CardContent>
       </Card>
 
-      {/* Submit Button */}
+      {/* Other Fields */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Label>Active</Label>
+            <Switch
+              checked={formData.isActive}
+              onCheckedChange={(checked) => handleChange("isActive", checked)}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Profile views: {profile?.profileViews ?? 0}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Last login: {profile?.lastLogin ? new Date(profile.lastLogin).toLocaleString() : "Never"}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Submit */}
       <div className="flex justify-end">
         <Button type="submit" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -356,5 +300,5 @@ export function ProfileForm() {
         </Button>
       </div>
     </form>
-  )
+  );
 }

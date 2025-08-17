@@ -1,7 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 // Create axios instance
 export const api = axios.create({
@@ -11,7 +10,6 @@ export const api = axios.create({
   },
   withCredentials: true,
 });
-
 
 // Request interceptor to add auth token
 // api.interceptors.request.use(
@@ -96,6 +94,20 @@ export const contentAPI = {
     api.patch(`/profile/update-profile/${id}`, data),
   deleteProfile: (id: string) => api.delete(`/profile/delete-profile/${id}`),
 
+  // Experience
+  getExperiences: () => api.get("/experience/get-all-experiences"),
+  getExperienceById: (id: string) => api.get(`/experience/get-experience-by-id/${id}`),
+  createExperience: (data: FormData) =>
+    api.post("/experience", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  updateExperience: (id: string, data: FormData) =>
+    api.patch(`/experience/update-experience/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  deleteExperience: (id: string) =>
+    api.delete(`/experience/delete-experience/${id}`),
+
   // Contact Queries
   createContactQuery: (data: {
     name: string;
@@ -103,7 +115,8 @@ export const contentAPI = {
     message: string;
   }) => api.post("/contact-queries", data),
   getContactQueries: () => api.get("/contact-queries/get-all-contact-queries"),
-  getRecentContactQueries: () => api.get("/contact-queries/get-recent-contact-queries"),
+  getRecentContactQueries: () =>
+    api.get("/contact-queries/get-recent-contact-queries"),
   updateContactQuery: (id: string, data: any) =>
     api.patch(`/contact-queries/update-contact-query/${id}`, data),
   deleteContactQuery: (id: string) =>

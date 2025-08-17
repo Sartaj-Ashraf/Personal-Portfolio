@@ -13,6 +13,10 @@ import cloudinary from "cloudinary";
 // @access  Private
 export const createProfile = async (req, res) => {
     const { totalProjects, totalTechStack } = req.body;
+    const profileCount = await PersonalDetails.countDocuments() !== 0;
+    if (profileCount) {
+        throw new badRequestErr("Only one profile can be created");
+    }
     let parsedTotalProjects = totalProjects;
     let parsedTotalTechStack = totalTechStack;
     if (typeof totalProjects === 'string') {
@@ -70,7 +74,7 @@ export const createProfile = async (req, res) => {
 // @route   GET /api/profile
 // @access  Public
 export const getProfile = async (req, res) => {
-    const profile = await PersonalDetails.find();
+    const profile = await PersonalDetails.findOne();
     if (!profile) {
         throw new NotFoundErr("No profile not found");
     }

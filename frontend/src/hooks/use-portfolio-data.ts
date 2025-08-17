@@ -13,6 +13,16 @@ export function useProjects() {
   })
 }
 
+export function useExperiences() {
+  return useQuery({
+    queryKey: ["experiences"],
+    queryFn: async () => {
+      const response = await contentAPI.getExperiences()
+      return response.data
+    },
+  })
+}
+
 export function useTechStack() {
   return useQuery({
     queryKey: ["techstack"],

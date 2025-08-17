@@ -5,7 +5,6 @@ import { authenticateUser, authorizePermissions } from "../middleware/authMiddle
 const router = Router();
 
 router.get("/get-profile", getProfile);
-// router.get("/get-project/:id", getProjectById);
 
 // Authication and authorization
 router.use(authenticateUser)

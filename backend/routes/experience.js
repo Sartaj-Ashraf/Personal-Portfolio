@@ -3,6 +3,7 @@ import {
     createExperience,
     deleteExperience,
     getAllExperiences,
+    getExperienceById,
     updateExperience
 } from "../controllers/experienceController.js";
 import {
@@ -18,7 +19,8 @@ import {
 const router = Router();
 
 // Public route
-router.get("/get-experience", getAllExperiences);
+router.get("/get-all-experiences", getAllExperiences);
+router.get("/get-experience-by-id/:id", validateIdParam, getExperienceById);
 
 // Authentication & Authorization for the below routes
 router.use(authenticateUser);
@@ -30,7 +32,7 @@ const experienceUploads = upload.fields([
     { name: "companyLogo", maxCount: 1 }
 ]);
 
-router.post("/", validateCreateExperienceInput, experienceUploads, createExperience);
+router.post("/",experienceUploads, createExperience);
 router.patch("/update-experience/:id", validateIdParam, experienceUploads, updateExperience);
 router.delete("/delete-experience/:id", validateIdParam, deleteExperience);
 

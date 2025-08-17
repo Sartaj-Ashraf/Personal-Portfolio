@@ -3,12 +3,11 @@ import mongoose from "mongoose";
 const ExperienceSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true,
         trim: true
     },
     company: {
         type: String,
-        required: true,
+   
         trim: true
     },
     location: {
@@ -44,7 +43,7 @@ const ExperienceSchema = new mongoose.Schema({
     },
     startDate: {
         type: Date,
-        required: true
+        
     },
     endDate: {
         type: Date

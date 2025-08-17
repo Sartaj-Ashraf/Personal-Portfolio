@@ -1,22 +1,15 @@
-"use client"
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { AdminLayout } from "@/components/admin/admin-layout"
-import { PageHeader } from "@/components/admin/page-header"
-import { ProfileForm } from "@/components/admin/profile/profile-form"
-
-const queryClient = new QueryClient()
-
+"use client";
+import { PageHeader } from "@/components/admin/page-header";
+import { ProfileForm } from "@/components/admin/profile/profile-form";
 export default function AdminProfilePage() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AdminLayout>
-        <div className="space-y-6">
-          <PageHeader title="Profile" description="Manage your personal information and portfolio details" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Profile"
+        description="Manage your personal information and portfolio details"
+      />
 
-          <ProfileForm />
-        </div>
-      </AdminLayout>
-    </QueryClientProvider>
-  )
+      <ProfileForm />
+    </div>
+  );
 }

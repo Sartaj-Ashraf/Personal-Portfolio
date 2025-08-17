@@ -15,6 +15,16 @@ const sidebarItems = [
     icon: LayoutDashboard,
   },
   {
+    title: "Messages",
+    href: "/admin/messages",
+    icon: MessageSquare,
+  },
+  {
+    title: "Experiences",
+    href: "/admin/experiences",
+    icon: MessageSquare,
+  },
+  {
     title: "Projects",
     href: "/admin/projects",
     icon: FolderOpen,
@@ -29,11 +39,7 @@ const sidebarItems = [
     href: "/admin/profile",
     icon: User,
   },
-  {
-    title: "Messages",
-    href: "/admin/messages",
-    icon: MessageSquare,
-  },
+
   {
     title: "Settings",
     href: "/admin/settings",

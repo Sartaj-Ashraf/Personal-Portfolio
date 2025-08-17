@@ -24,7 +24,7 @@ const uploadImage = async (file) => {
 };
 
 
- // Helper: Delete image from Cloudinary
+// Helper: Delete image from Cloudinary
 
 const deleteImage = async (publicId) => {
     if (publicId) {
@@ -50,7 +50,7 @@ export const createExperience = async (req, res) => {
             details.companyLogoPublicId = logo.publicId;
         }
     }
-
+    console.log(details)
     const experience = await Experience.create(details);
     res.status(StatusCodes.CREATED).json({
         success: true,
@@ -61,11 +61,22 @@ export const createExperience = async (req, res) => {
 
 // Get All Experiences
 export const getAllExperiences = async (req, res) => {
-    const experiences = await Experience.find().populate("technologiesUsed");
+    const experiences = await Experience.find().populate("technologiesUsed").sort({ createdAt: -1 });
     res.status(StatusCodes.OK).json({
         success: true,
         message: "Experiences fetched successfully",
         experiences,
+    });
+};
+
+export const getExperienceById = async (req, res) => {
+    const { id } = req.params;
+    const experience = await Experience.findById(id);
+    if (!experience) throw new NotFoundErr("Experience not found");
+    res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Experience fetched successfully",
+        experience,
     });
 };
 

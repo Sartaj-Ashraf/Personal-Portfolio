@@ -1,30 +1,37 @@
+"use client"
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
+
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/toaster"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { useReactQueryClient } from "@/lib/query-client"
 
-export const metadata: Metadata = {
-  title: "Portfolio - Professional Developer",
-  description: "Modern portfolio showcasing projects, skills, and experience",
-  generator: "v0.app",
-}
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
+  const queryClient = useReactQueryClient()
+
   return (
     <html lang="en">
-      <head>
-      </head>
+      <head />
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <AuthProvider>
-            {children}
-            <Toaster />
+            <QueryClientProvider client={queryClient}>
+              {children}
+              <Toaster />
+            </QueryClientProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
