@@ -2,8 +2,8 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { contentAPI } from "@/lib/api";
+import { useMutation } from "@tanstack/react-query";
+import { profileAPI } from "@/lib/api";
 import { useProfile } from "@/hooks/use-portfolio-data";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -11,11 +11,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, X, Upload } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useRouter } from "next/navigation";
 
-export function ProfileForm() {
-  const { data: { profile = {} } = {}, isLoading } = useProfile();
+interface ProfileFormProps {
+  profile?: any
+  isEdit?: boolean
+}
+
+export function ProfileForm({ profile, isEdit = false }: ProfileFormProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     about: "",
@@ -32,20 +38,22 @@ export function ProfileForm() {
       twitter: "",
       instagram: "",
     },
-    totalProjects: [] as string[], // ObjectIds
-    totalTechStack: [] as string[], // ObjectIds
     isActive: true,
   });
 
+  console.log({social: formData.social});
+
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  console.log({profile});
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Initialize form with existing profile
   useEffect(() => {
     if (profile) {
+      setLoading(true);
       setFormData({
         name: profile.name || "",
         about: profile.about || "",
@@ -62,27 +70,60 @@ export function ProfileForm() {
           twitter: profile.social?.twitter || "",
           instagram: profile.social?.instagram || "",
         },
-        totalProjects: profile.totalProjects || [],
-        totalTechStack: profile.totalTechStack || [],
         isActive: profile.isActive ?? true,
       });
+      
+      // Set existing image preview if editing
+      if (profile.imageUrl && typeof profile.imageUrl === 'string') {
+        setImagePreview(profile.imageUrl);
+      }
+      setLoading(false);
     }
-  }, [profile]);
+  }, [profile, isEdit]);
+
+  // Handle image file selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      
+      // Create preview URL for the selected file
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Remove image preview and file
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    // Reset the file input
+    const fileInput = document.getElementById('image') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => {
       if (profile?._id) {
-        return contentAPI.updateProfile(profile._id, data);
+        setLoading(true);
+        return profileAPI.updateProfile(profile._id, data);
       } else {
-        return contentAPI.createProfile(data);
+        setLoading(true);
+        return profileAPI.createProfile(data);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast({
         title: "Success",
         description: "Profile updated successfully",
       });
+      setLoading(false);
+      router.push("/admin/profile");
     },
     onError: (error: any) => {
       toast({
@@ -90,6 +131,7 @@ export function ProfileForm() {
         description: error.response?.data?.message || "Failed to update profile",
         variant: "destructive",
       });
+      setLoading(false);
     },
   });
 
@@ -134,10 +176,6 @@ export function ProfileForm() {
     }
   };
 
-  if (isLoading) {
-    return <p>Loading...</p>;
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Personal & Professional Information */}
@@ -175,13 +213,53 @@ export function ProfileForm() {
               onChange={(e) => handleChange("phoneNumber", e.target.value)}
             />
 
-            <Label htmlFor="image">Profile Image</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-            />
+            {/* Image Upload with Preview */}
+            <div className="space-y-3">
+              <Label htmlFor="image">Profile Image</Label>
+              
+              {/* Image Preview */}
+              {imagePreview && (
+                <div className="relative inline-block">
+                  <img
+                    src={imagePreview}
+                    alt="Profile preview"
+                    className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
+
+              {/* File Input */}
+              <div className="flex items-center gap-2">
+                <Input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <Label 
+                  htmlFor="image" 
+                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
+                >
+                  <Upload className="h-4 w-4" />
+                  {imagePreview ? 'Change Image' : 'Upload Image'}
+                </Label>
+              </div>
+              
+              {/* Image upload hint */}
+              <p className="text-sm text-muted-foreground">
+                Recommended: Square image, at least 300x300px
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -295,7 +373,7 @@ export function ProfileForm() {
       {/* Submit */}
       <div className="flex justify-end">
         <Button type="submit" disabled={loading}>
-          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-white" />}
           {profile?._id ? "Update Profile" : "Create Profile"}
         </Button>
       </div>

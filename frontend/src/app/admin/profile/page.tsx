@@ -1,6 +1,5 @@
-"use client";
 import { PageHeader } from "@/components/admin/page-header";
-import { ProfileForm } from "@/components/admin/profile/profile-form";
+import { PersonalDetailsCard } from "@/components/admin/profile/profile-display";
 export default function AdminProfilePage() {
   return (
     <div className="space-y-6">
@@ -9,7 +8,7 @@ export default function AdminProfilePage() {
         description="Manage your personal information and portfolio details"
       />
 
-      <ProfileForm />
+      <PersonalDetailsCard />
     </div>
   );
 }

@@ -1,6 +1,4 @@
-"use client"
 
-import { AdminLayout } from "@/components/admin/admin-layout"
 import { PageHeader } from "@/components/admin/page-header"
 import { ExperienceForm } from "@/components/admin/experiences/experience-form"
 

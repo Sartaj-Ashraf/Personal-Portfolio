@@ -1,10 +1,8 @@
 import PersonalDetails from "../models/personalDetails.js";
-import Techstack from "../models/techstackModel.js"; // Import Techstack model
-import Project from "../models/projectModel.js";
-
 import { StatusCodes } from "http-status-codes";
 import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 import cloudinary from "cloudinary";
+import { formatImage } from "../utils/multer.js";
 
 // Schema Fields -  name,about,totalProjects(ref),totalTechStack(ref),username,email,phoneNumber,bio, jobTitle,location,company,social {github,linkedin,twitter,instagram},profileViews,lastLogin,isActive,imageUrl,imagePublicId,
 
@@ -12,54 +10,12 @@ import cloudinary from "cloudinary";
 // @route   POST /api/profile
 // @access  Private
 export const createProfile = async (req, res) => {
-    const { totalProjects, totalTechStack } = req.body;
     const profileCount = await PersonalDetails.countDocuments() !== 0;
     if (profileCount) {
-        throw new badRequestErr("Only one profile can be created");
-    }
-    let parsedTotalProjects = totalProjects;
-    let parsedTotalTechStack = totalTechStack;
-    if (typeof totalProjects === 'string') {
-        try {
-            parsedTotalProjects = JSON.parse(totalProjects);
-        } catch (error) {
-            throw new badRequestErr("Invalid projects format");
-        }
-    }
-
-    if (typeof totalTechStack === 'string') {
-        try {
-            parsedTotalTechStack = JSON.parse(totalTechStack);
-        } catch (error) {
-            throw new badRequestErr("Invalid techStack format");
-        }
-    }
-    // Validate techStack ObjectIds if provided
-    if (parsedTotalTechStack && parsedTotalTechStack.length > 0) {
-        const validTechStacks = await Techstack.find({
-            _id: { $in: parsedTotalTechStack }
-        }).select('_id');
-
-        if (validTechStacks.length !== parsedTotalTechStack.length) {
-            throw new badRequestErr("One or more techStack IDs are invalid");
-        }
-    }
-    if (parsedTotalProjects && parsedTotalProjects.length > 0) {
-        const validProjects = await Project.find({
-            _id: { $in: parsedTotalProjects }
-        }).select('_id');
-
-        if (validProjects.length !== parsedTotalProjects.length) {
-            throw new badRequestErr("One or more project IDs are invalid");
-        }
+        throw new badRequestErr("Only one profile can be created and it exists");
     }
     // Handle image uploads
-    const newProfile = new PersonalDetails({
-        ...req.body,
-        totalProjects: parsedTotalProjects,
-        totalTechStack: parsedTotalTechStack,
-    });
-
+    let newProfile = { ...req.body }
     if (req.file) {
         const imageUrl = formatImage(req.file);
         const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
@@ -67,7 +23,7 @@ export const createProfile = async (req, res) => {
         newProfile.imagePublicId = imageResponse.public_id;
     }
 
-    await newProfile.save();
+    await PersonalDetails.create(newProfile);
     res.status(StatusCodes.CREATED).json({ success: true, message: "Profile created successfully", newProfile });
 }
 // @desc    Get all profiles
@@ -81,83 +37,58 @@ export const getProfile = async (req, res) => {
     res.status(StatusCodes.OK).json({ success: true, message: "Profile fetched successfully", profile });
 };
 
+export const getProfileById = async (req, res) => {
+    const { id } = req.params;
+    const profile = await PersonalDetails.findById(id);
+    if (!profile) {
+        throw new NotFoundErr("Profile not found");
+    }
+    res.status(StatusCodes.OK).json({ success: true, message: "Profile fetched successfully", profile });
+}
+
 // @desc    Update a profile
 // @route   PATCH /api/profile/:id
 // @access  Private
 export const updateProfile = async (req, res) => {
     const { id } = req.params;
-    const {
-        totalProjects,
-        totalTechStack,
-    } = req.body;
+  
+    // Prepare update object directly instead of overwriting profile
+    const updateData = { ...req.body };
 
-    const profile = await PersonalDetails.findById(id);
-    if (!profile) {
-        throw new NotFoundErr("Profile not found");
-    }
-
-    let fieldsToUpdate = { ...req.body }
-
-    let parsedTotalProjects = totalProjects;
-    let parsedTotalTechStack = totalTechStack;
-    if (typeof totalProjects === 'string') {
-        try {
-            parsedTotalProjects = JSON.parse(totalProjects);
-        } catch (error) {
-            throw new badRequestErr("Invalid techStack format");
-        }
-    }
-
-    if (typeof totalTechStack === 'string') {
-        try {
-            parsedTotalTechStack = JSON.parse(totalTechStack);
-        } catch (error) {
-            throw new badRequestErr("Invalid features format");
-        }
-    }
-
-    // Validate techStack ObjectIds if provided
-    if (parsedTotalTechStack && parsedTotalTechStack.length > 0) {
-        const validTechStacks = await Techstack.find({
-            _id: { $in: parsedTotalTechStack }
-        }).select('_id');
-
-        if (validTechStacks.length !== parsedTotalTechStack.length) {
-            throw new badRequestErr("One or more techStack IDs are invalid");
-        } else {
-            fieldsToUpdate.totalTechStack = parsedTotalTechStack;
-        }
-    }
-    if (parsedTotalProjects && parsedTotalProjects.length > 0) {
-        const validProjects = await Project.find({
-            _id: { $in: parsedTotalProjects }
-        }).select('_id');
-
-        if (validProjects.length !== parsedTotalProjects.length) {
-            throw new badRequestErr("One or more project IDs are invalid");
-        } else {
-            fieldsToUpdate.totalProjects = parsedTotalProjects;
-        }
-    }
-
+    if (req.body.social && typeof req.body.social === "string") {
+        updateData.social = JSON.parse(req.body.social);
+      }
+  
     if (req.file) {
-        const imageUrl = formatImage(req.file);
-        const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
-        fieldsToUpdate.imageUrl = imageResponse.secure_url;
-        fieldsToUpdate.imagePublicId = imageResponse.public_id;
+      const imageUrl = formatImage(req.file);
+      const imageResponse = await cloudinary.v2.uploader.upload(imageUrl);
+      updateData.imageUrl = imageResponse.secure_url;
+      updateData.imagePublicId = imageResponse.public_id;
     }
-
-    fieldsToUpdate = await PersonalDetails.findByIdAndUpdate(id, fieldsToUpdate, { new: true });
-    res.status(StatusCodes.OK).json({ success: true, message: "Profile updated successfully", fieldsToUpdate });
-}
-
+  
+    // Direct update (no need to fetch doc first unless you want to check existence)
+    const updatedProfile = await PersonalDetails.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true }
+    );
+  
+    if (!updatedProfile) {
+      throw new NotFoundErr("Profile not found");
+    }
+  
+    res
+      .status(StatusCodes.OK)
+      .json({ success: true, message: "Profile updated successfully", updatedProfile });
+  };
+  
 // @desc    Delete a profile
 // @route   DELETE /api/profile/:id
 // @access  Private
 export const deleteProfile = async (req, res) => {
     const { id } = req.params;
 
-    const profile = await PersonalDetails.findById(id);
+    let profile = await PersonalDetails.findById(id);
 
     if (!profile) {
         throw new NotFoundErr("Profile not found");

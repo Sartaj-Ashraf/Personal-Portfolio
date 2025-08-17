@@ -14,6 +14,5 @@ export const validateCreateProfileInput = withValidationErrors([
     body("*.email").isEmail().withMessage("Email is required"),
     body("*.name").notEmpty().withMessage("Name is required"),
     body("*.about").notEmpty().withMessage("About is required"),
-    body("*.username").notEmpty().withMessage("Username is required"),
 ]);
 

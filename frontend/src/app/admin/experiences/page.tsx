@@ -1,6 +1,3 @@
-"use client";
-
-import { AdminLayout } from "@/components/admin/admin-layout";
 import { PageHeader } from "@/components/admin/page-header";
 import { ExperiencesTable } from "@/components/admin/experiences/experiences-table";
 import { Button } from "@/components/ui/button";

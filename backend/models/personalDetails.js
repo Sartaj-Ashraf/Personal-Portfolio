@@ -9,16 +9,6 @@ const PersonalDetails = new mongoose.Schema({
         type: String,
         trim: true
     },
-    // References to projects and tech stack
-    totalProjects: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Project",
-    }],
-    totalTechStack: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Techstack",
-    }],
-
     username: {
         type: String,
         unique: true,
