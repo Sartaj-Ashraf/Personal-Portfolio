@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { MoreHorizontal, Edit, Trash2, ExternalLink, Github } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, ExternalLink, Github, Plus } from "lucide-react"
 import Link from "next/link"
 
 const statusColors = {
@@ -30,7 +30,7 @@ const statusColors = {
 }
 
 export function ProjectsTable() {
-  const { data: projects, isLoading } = useProjects()
+  const { data: {projects=[]}, isLoading } = useProjects()
   const [deleteProject, setDeleteProject] = useState<any>(null)
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -73,6 +73,12 @@ export function ProjectsTable() {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">No projects found. Create your first project to get started.</p>
+        <Button asChild>
+          <Link href="/admin/projects/new">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Project
+          </Link>
+        </Button>
       </div>
     )
   }
