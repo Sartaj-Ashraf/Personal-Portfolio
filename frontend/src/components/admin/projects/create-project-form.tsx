@@ -3,23 +3,22 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import { toast, useToast } from "@/hooks/use-toast";
 import { useTechStack } from "@/hooks/use-portfolio-data";
 import { porjectAPI } from "@/lib/api";
 import { Loader2, X, Plus } from "lucide-react";
 
-interface CreateProjectFormProps {
-  // No props needed for create form
-}
 
-export function CreateProjectForm({}: CreateProjectFormProps) {
+export function CreateProjectForm() {
   const router = useRouter();
   const { toast } = useToast();
   const { data: techStack } = useTechStack();
@@ -155,7 +154,7 @@ export function CreateProjectForm({}: CreateProjectFormProps) {
   const isLoading = createMutation.isPending;
 
   return (
-    <div className="p-6">
+    <div className="">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basic Information */}

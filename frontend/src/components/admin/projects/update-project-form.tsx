@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ interface EditProjectFormProps {
 }
 
 export function EditProjectForm({ project }: EditProjectFormProps) {
+  const featureRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const { toast } = useToast();
   const { data: techStack } = useTechStack();
@@ -34,7 +35,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
     Array.isArray(project?.projectImages) ? project.projectImages : []
   );
   const [newFiles, setNewFiles] = useState<File[]>([]);
-  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+
   const [features, setFeatures] = useState<string[]>(project?.features || []);
   const [selectedTechStack, setSelectedTechStack] = useState<string[]>(
     project?.techStack || []
@@ -42,7 +43,6 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
 
   // Image management
   const removeExistingImage = (publicId: string) => {
-    setRemovedImageIds(prev => [...prev, publicId]);
     setExistingImages(prev => prev.filter(img => img.publicId !== publicId));
   };
 
@@ -58,6 +58,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
 
   // Features management
   const addFeature = (featureText: string) => {
+    
     if (featureText.trim()) {
       setFeatures(prev => [...prev, featureText.trim()]);
     }
@@ -100,29 +101,6 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
 
     // Get form data from the event
     const formData = new FormData(e.currentTarget);
-
-    // Basic validation
-    const title = formData.get('title') as string;
-    const description = formData.get('description') as string;
-
-    if (!title?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Project title is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!description?.trim()) {
-      toast({
-        title: "Validation Error", 
-        description: "Project description is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Create submission FormData
     const submitData = new FormData();
 
@@ -141,16 +119,9 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
     submitData.append('techStack', JSON.stringify(selectedTechStack));
     submitData.append('features', JSON.stringify(features));
     submitData.append('projectImages', JSON.stringify(existingImages));
-    
-    if (removedImageIds.length > 0) {
-      submitData.append('removedPublicIds', JSON.stringify(removedImageIds));
-    }
-
-    // Add new image files
     newFiles.forEach(file => {
       submitData.append('images', file);
     });
-
     updateMutation.mutate(submitData);
   };
 
@@ -159,6 +130,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
       e.preventDefault();
       const input = e.currentTarget;
       addFeature(input.value);
+      featureRef.current?.focus()
       input.value = '';
     }
   };
@@ -166,8 +138,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
   const isLoading = updateMutation.isPending;
 
   return (
-    <div className="p-6">
-
+    <div className="">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basic Information */}
@@ -341,6 +312,7 @@ export function EditProjectForm({ project }: EditProjectFormProps) {
                 placeholder="Add a key feature"
                 onKeyPress={handleFeatureKeyPress}
                 disabled={isLoading}
+                ref={featureRef}
               />
               <Button 
                 type="button" 
