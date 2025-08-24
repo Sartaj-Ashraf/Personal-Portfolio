@@ -1,6 +1,6 @@
 "use client";
 import { PageHeader } from "@/components/admin/page-header";
-import { ProjectForm } from "@/components/admin/projects/project-form";
+import { CreateProjectForm } from "@/components/admin/projects/create-project-form";
 
 export default function NewProjectPage() {
   return (
@@ -10,7 +10,7 @@ export default function NewProjectPage() {
         description="Create a new project for your portfolio"
         backHref="/admin/projects"
       />
-      <ProjectForm />
+      <CreateProjectForm />
     </div>
   );
 }

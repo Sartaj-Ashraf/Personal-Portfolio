@@ -130,10 +130,12 @@ export const porjectAPI = {
   getProjects: () => api.get("/projects/get-all-projects"),
   getProjectById: (id: string) => api.get(`/projects/get-project-by-id/${id}`),
 
-  createProject: (data: any) =>
-    api.post("/projects", data, {
+  createProject: (data: any) => {
+    console.log(data);
+    return api.post("/projects", data, {
       headers: { "Content-Type": "multipart/form-data" },
-    }),
+    });
+  },
 
   updateProject: (id: string, data: any) =>
     api.patch(`/projects/update-project/${id}`, data, {

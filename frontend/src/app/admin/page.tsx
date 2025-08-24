@@ -11,7 +11,7 @@ const queryClient = new QueryClient()
 export default function AdminDashboard() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AdminLayout>
+      {/* <AdminLayout> */}
         <div className="space-y-6">
           {/* Header */}
           <div>
@@ -28,7 +28,7 @@ export default function AdminDashboard() {
             <QuickActions />
           </div>
         </div>
-      </AdminLayout>
+      {/* </AdminLayout> */}
     </QueryClientProvider>
   )
 }

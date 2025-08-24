@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useProjects } from "@/hooks/use-portfolio-data";
 import { porjectAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -22,15 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  DeleteConfirmationDialog,
+} from "@/components/admin/shared/confirm-delete-modal";
+import { useDeleteConfirmation } from "@/hooks/use-confirm-delete"
+
 import {
   MoreHorizontal,
   Edit,
@@ -52,11 +46,10 @@ const statusColors = {
 };
 
 export function ProjectsTable() {
-  const { data: { projects = [] } = {}, isLoading } = useProjects();
-  const [deleteProject, setDeleteProject] = useState<any>(null);
+  const { data: { projects = [] } = {}, isLoading, refetch } = useProjects();
+  const { deleteItem, openDeleteDialog, closeDeleteDialog, isOpen } = useDeleteConfirmation();
   const { toast } = useToast();
-  console.log({projects});
-
+  
   const deleteMutation = useMutation({
     mutationFn: (id: string) => porjectAPI.deleteProject(id),
     onSuccess: () => {
@@ -64,17 +57,23 @@ export function ProjectsTable() {
         title: "Success",
         description: "Project deleted successfully",
       });
-      setDeleteProject(null);
+      refetch();
+      closeDeleteDialog();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description:
-          error.response?.data?.message || "Failed to delete project",
+        description: error.response?.data?.message || "Failed to delete project",
         variant: "destructive",
       });
     },
   });
+
+  const handleDeleteConfirm = () => {
+    if (deleteItem?._id) {
+      deleteMutation.mutate(deleteItem._id);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -127,12 +126,12 @@ export function ProjectsTable() {
           </TableHeader>
           <TableBody>
             {projects.map((project: any) => (
-              <TableRow key={project._id} >
-                <TableCell >
+              <TableRow key={project._id}>
+                <TableCell>
                   <div className="w-[200px]">
                     <p className="font-medium">{project.title}</p>
                     <p className="text-sm text-muted-foreground line-clamp-1">
-                      {project.description} ...
+                      {project.description}
                     </p>
                   </div>
                 </TableCell>
@@ -150,7 +149,7 @@ export function ProjectsTable() {
                     {project.status}
                   </Badge>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {project.techStack
                       ?.slice(0, 2)
@@ -169,7 +168,7 @@ export function ProjectsTable() {
                       </Badge>
                     )}
                   </div>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>
                   <div className="flex space-x-2">
                     {project.githubRepo && (
@@ -178,6 +177,7 @@ export function ProjectsTable() {
                           href={project.githubRepo}
                           target="_blank"
                           rel="noopener noreferrer"
+                          aria-label="View GitHub Repository"
                         >
                           <Github className="h-4 w-4" />
                         </a>
@@ -189,6 +189,7 @@ export function ProjectsTable() {
                           href={project.liveDemo}
                           target="_blank"
                           rel="noopener noreferrer"
+                          aria-label="View Live Demo"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
@@ -203,6 +204,7 @@ export function ProjectsTable() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Open menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -214,8 +216,8 @@ export function ProjectsTable() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        className="text-destructive"
-                        onClick={() => setDeleteProject(project)}
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => openDeleteDialog(project)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
@@ -230,29 +232,17 @@ export function ProjectsTable() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={!!deleteProject}
-        onOpenChange={() => setDeleteProject(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              project "{deleteProject?.title}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteMutation.mutate(deleteProject._id)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteConfirmationDialog
+        isOpen={isOpen}
+        onClose={closeDeleteDialog}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+        title="Delete Project"
+        description="This will permanently delete the project and all its associated data including images, tech stack associations, and other related information."
+        itemName={deleteItem?.title}
+        confirmText="Delete Project"
+        cancelText="Cancel"
+      />
     </>
   );
 }

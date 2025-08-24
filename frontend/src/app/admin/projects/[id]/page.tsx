@@ -1,4 +1,4 @@
-import { ProjectForm } from "@/components/admin/projects/project-form";
+import { EditProjectForm } from "@/components/admin/projects/update-project-form";
 import { porjectAPI } from "@/lib/api";
 
 export default async function EditProjectPage({
@@ -7,11 +7,12 @@ export default async function EditProjectPage({
   params: { id: string };
 }) {
   const { data } = await porjectAPI.getProjectById(params?.id);
+  console.log({data});
 
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Edit Project</h1>
-      <ProjectForm project={data} isEdit />
+      <EditProjectForm project={data?.data} />
     </div>
   );
 }

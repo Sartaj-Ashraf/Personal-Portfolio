@@ -5,6 +5,7 @@ import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 import { uploadImagesToCloudinary, deleteImagesFromCloudinary } from "../utils/imageHandler.js";
 import { getPaginationInfo, getPaginationParams } from "../utils/pagination.js";
 
+
 // @desc    Create a new project
 // @route   POST /api/projects
 // @access  Private
@@ -14,14 +15,17 @@ export const createProject = async (req, res) => {
     techStack,
     features,
   } = req.body;
+  const files = req.files;
+
+  if (!files || files.length === 0) {
+    throw new badRequestErr("At least one image file is required");
+  }
 
   let project = await Project.findOne({ title: { $regex: new RegExp(`^${title}$`, "i") } });
   if (project) {
     throw new badRequestErr("Project already exists");
   }
   let projectToCreate = { ...req.body }
-
-
   // Parse techStack and features if they're strings (from form data)
   let parsedTechStack = techStack;
   let parsedFeatures = features;
@@ -33,37 +37,41 @@ export const createProject = async (req, res) => {
       throw new badRequestErr("Invalid techStack format");
     }
   }
-  
+
   if (typeof features === 'string') {
     try {
       parsedFeatures = JSON.parse(features);
-      
+
     } catch (error) {
       throw new badRequestErr("Invalid features format");
     }
   }
-  
+
   // Validate techStack ObjectIds if provided
   if (parsedTechStack && parsedTechStack.length > 0) {
     const validTechStacks = await Techstack.find({
       _id: { $in: parsedTechStack }
     }).select('_id');
-    
+
     if (validTechStacks.length !== parsedTechStack.length) {
       throw new badRequestErr("One or more techStack IDs are invalid");
     }
   }
-  
-  // Handle image uploads
-  let projectImages = [];
-  if (req.files && req.files.length > 0) {
-    projectImages = await uploadImagesToCloudinary(req.files);
-    projectToCreate.projectImages = projectImages
-  }
-  console.log(projectToCreate)
-  
+
+  // Upload images to Cloudinary
+  const uploadedImages = await uploadImagesToCloudinary(files);
+
+  // Create gallery entries in database
+  const galleryEntries = uploadedImages.map(image => ({
+    url: image.url,
+    publicId: image.publicId,
+  }));
+
+  console.log({ galleryEntries, uploadedImages })
+
   projectToCreate.techStack = parsedTechStack
   projectToCreate.features = parsedFeatures
+  projectToCreate.projectImages = galleryEntries
 
   project = await Project.create(projectToCreate)
 
@@ -83,8 +91,7 @@ export const getAllProjects = async (req, res) => {
     category,
     status,
     techStack,
-    sortBy = "createdAt",
-    sortOrder = "desc",
+    sortBy = "newest",
     search,
   } = req.query;
 
@@ -112,14 +119,18 @@ export const getAllProjects = async (req, res) => {
     ];
   }
 
-  // Build sort object
-  const sort = {};
-  sort[sortBy] = sortOrder === "desc" ? -1 : 1;
+  let sort = {};
+  if (sortBy === "newest") {
+    sort = { createdAt: -1 };
+  } else if (sortBy === "oldest") {
+    sort = { createdAt: 1 };
+  }
 
   if (req.query.page || req.query.limit) {
     const { page, limit, skip } = getPaginationParams(req);
     const projects = await Project.find(filter)
       .skip(skip)
+      .sort(sort)
       .limit(limit);
     const totalDocs = await Project.countDocuments(filter);
     const { paginationInfo } = getPaginationInfo(totalDocs, page, limit)
@@ -162,6 +173,7 @@ export const updateProject = async (req, res) => {
   const {
     techStack,
     features,
+    projectImages,
   } = req.body;
 
   let project = await Project.findById(id);
@@ -176,6 +188,7 @@ export const updateProject = async (req, res) => {
   // Parse techStack and features if they're strings
   let parsedTechStack = techStack;
   let parsedFeatures = features;
+  let parsedProjectImages = projectImages;
 
   if (typeof techStack === 'string') {
     try {
@@ -195,6 +208,15 @@ export const updateProject = async (req, res) => {
     }
   }
 
+  if (typeof projectImages === 'string') {
+    try {
+      parsedProjectImages = JSON.parse(projectImages);
+      updateData.projectImages = parsedProjectImages;
+    } catch (error) {
+      throw new badRequestErr("Invalid projectImages format");
+    }
+  }
+
   // Validate techStack ObjectIds if provided
   if (parsedTechStack && parsedTechStack.length > 0) {
     const validTechStacks = await Techstack.find({
@@ -206,11 +228,16 @@ export const updateProject = async (req, res) => {
     }
   }
 
+  if(parsedProjectImages){
+    let publicIds = parsedProjectImages.map(img => img.publicId)
+    await deleteImagesFromCloudinary(publicIds)
+  }
+
   // Handle new image uploads
   if (req.files && req.files.length > 0) {
     const newImages = await uploadImagesToCloudinary(req.files);
     // Add new images to existing ones
-    updateData.projectImages = [...project.projectImages, ...newImages];
+    updateData.projectImages = [...parsedProjectImages, ...newImages];
   }
 
   // Update the project with the updateData

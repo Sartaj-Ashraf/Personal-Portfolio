@@ -13,9 +13,9 @@ router.get("/get-project-by-id/:id", validateIdParam, getProjectById);
 router.use(authenticateUser)
 router.use(authorizePermissions("admin"))
 
-router.post("/", upload.array('projectImages', 10), createProject);
+router.post("/", upload.array('images', 10), createProject);
 
-router.patch("/update-project/:id", validateIdParam, upload.array('projectImages', 10), updateProject);
+router.patch("/update-project/:id", validateIdParam, upload.array('images', 10), updateProject);
 router.delete("/delete-project/:id", validateIdParam, deleteProject);
 
 export default router;
