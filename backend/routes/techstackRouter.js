@@ -1,11 +1,12 @@
 import {Router} from "express";
-import { createTech, deleteAllTech, deleteTech, getAllTech, updateTech } from "../controllers/techstackController.js";
+import { createTech, deleteAllTech, deleteTech, getAllTech, getTechById, updateTech } from "../controllers/techstackController.js";
 import { validateCreateTechInput, validateIdParam } from "../middleware/fieldValidation/techstack/validation.js";
 import { authenticateUser, authorizePermissions } from "../middleware/authMiddleware.js";
 import upload from "../middleware/multer.js";
 const router = Router();
 
 router.get("/get-all-tech", getAllTech);
+router.get("/get-tech-by-id/:id", validateIdParam, getTechById);
 
 // Authication and authorization
 router.use(authenticateUser)

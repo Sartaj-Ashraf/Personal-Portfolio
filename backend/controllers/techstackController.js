@@ -9,10 +9,26 @@ import { badRequestErr, NotFoundErr } from "../errors/customErors.js";
 // @route   POST /api/techstack
 // @access  Private
 export const createTech = async (req, res) => {
-    const { title, } = req.body;
+    const { title, keypoints, referenceWebsite } = req.body;
     const existingTechStack = await Techstack.findOne({ title: { $regex: new RegExp(`^${title}$`, "i") } });
     if (existingTechStack) {
         throw new badRequestErr("Techstack already exists");
+    }
+    let parsedKeyPoints = [];
+    let parsedReferenceWebsite = [];
+    if (typeof keypoints === 'string') {
+        try {
+            parsedKeyPoints = JSON.parse(keypoints);
+        } catch (error) {
+            throw new badRequestErr("Invalid keypoints format");
+        }
+    }
+    if (typeof referenceWebsite === 'string') {
+        try {
+            parsedReferenceWebsite = JSON.parse(referenceWebsite);
+        } catch (error) {
+            throw new badRequestErr("Invalid reference website format");
+        }
     }
 
     const newTechStack = { ...req.body };
@@ -22,6 +38,8 @@ export const createTech = async (req, res) => {
         newTechStack.imageUrl = imageResponse.secure_url;
         newTechStack.imagePublicId = imageResponse.public_id;
     }
+    newTechStack.keypoints = parsedKeyPoints;
+    newTechStack.referenceWebsite = parsedReferenceWebsite;
     const techStack = await Techstack.create(newTechStack);
     res.status(StatusCodes.CREATED).json({ success: true, message: "Techstack created successfully", techStack });
 }
@@ -48,13 +66,25 @@ export const getAllTech = async (req, res) => {
     }
     if (req.query.page || req.query.limit) {
         const { page, limit, skip } = getPaginationParams(req);
-        const techStacks = await Techstack.find(queryObject).skip(skip).limit(limit);
+        const techStacks = await Techstack.find(queryObject).sort({ createdAt: -1 }).skip(skip).limit(limit);
         const totalDocs = await Techstack.countDocuments(queryObject);
         const paginationInfo = getPaginationInfo(totalDocs, page, limit);
         return res.status(StatusCodes.OK).json({ success: true, message: "Techstacks fetched successfully", techStacks, paginationInfo });
     }
-    const techStacks = await Techstack.find(queryObject);
+    const techStacks = await Techstack.find(queryObject).sort({ createdAt: -1 });
     res.status(StatusCodes.OK).json({ success: true, message: "Techstacks fetched successfully", techStacks });
+}
+
+// @desc    Get a techstack by id
+// @route   GET /api/techstack/:id
+// @access  Private
+export const getTechById = async (req, res) => {
+    const { id } = req.params;
+    const techStack = await Techstack.findById(id);
+    if (!techStack) {
+        throw new NotFoundErr("Techstack not found");
+    }
+    res.status(StatusCodes.OK).json({ success: true, message: "Techstack fetched successfully", techStack });
 }
 
 // @desc    Update a techstack
@@ -62,6 +92,24 @@ export const getAllTech = async (req, res) => {
 // @access  Private
 export const updateTech = async (req, res) => {
     const { id } = req.params;
+    const { keypoints, referenceWebsite } = req.body;
+    let parsedKeyPoints = [];
+    let parsedReferenceWebsite = [];
+
+    if (typeof keypoints === 'string') {
+        try {
+            parsedKeyPoints = JSON.parse(keypoints);
+        } catch (error) {
+            throw new badRequestErr("Invalid keypoints format");
+        }
+    }
+    if (typeof referenceWebsite === 'string') {
+        try {
+            parsedReferenceWebsite = JSON.parse(referenceWebsite);
+        } catch (error) {
+            throw new badRequestErr("Invalid reference website format");
+        }
+    }
     const existingTechStack = await Techstack.findById(id);
     if (!existingTechStack) {
         throw new NotFoundErr("Techstack not found");
@@ -73,6 +121,9 @@ export const updateTech = async (req, res) => {
         newTechStack.imageUrl = imageResponse.secure_url;
         newTechStack.imagePublicId = imageResponse.public_id;
     }
+    newTechStack.keypoints = parsedKeyPoints;
+    newTechStack.referenceWebsite = parsedReferenceWebsite;
+
     if (existingTechStack.imagePublicId) {
         await cloudinary.v2.uploader.destroy(existingTechStack.imagePublicId);
     }

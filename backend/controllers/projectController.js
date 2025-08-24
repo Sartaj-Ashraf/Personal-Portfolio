@@ -129,8 +129,8 @@ export const getAllProjects = async (req, res) => {
   if (req.query.page || req.query.limit) {
     const { page, limit, skip } = getPaginationParams(req);
     const projects = await Project.find(filter)
-      .skip(skip)
       .sort(sort)
+      .skip(skip)
       .limit(limit);
     const totalDocs = await Project.countDocuments(filter);
     const { paginationInfo } = getPaginationInfo(totalDocs, page, limit)
@@ -140,7 +140,7 @@ export const getAllProjects = async (req, res) => {
 
   }
 
-  const projects = await Project.find(filter);
+  const projects = await Project.find(filter).sort(sort);
   res
     .status(StatusCodes.OK)
     .json({ success: true, message: "Project fetched successfully", projects });
@@ -228,7 +228,7 @@ export const updateProject = async (req, res) => {
     }
   }
 
-  if(parsedProjectImages){
+  if (parsedProjectImages) {
     let publicIds = parsedProjectImages.map(img => img.publicId)
     await deleteImagesFromCloudinary(publicIds)
   }

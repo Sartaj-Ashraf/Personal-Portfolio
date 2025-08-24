@@ -55,18 +55,6 @@ export const authAPI = {
 
 // Content API functions
 export const contentAPI = {
-  // Tech Stack
-  getTechStack: () => api.get("/techstack/get-all-tech"),
-  createTech: (data: FormData) =>
-    api.post("/techstack", data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  updateTech: (id: string, data: FormData) =>
-    api.patch(`/techstack/update-tech/${id}`, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    }),
-  deleteTech: (id: string) => api.delete(`/techstack/delete-tech/${id}`),
-
   // Skills
   getSkills: () => api.get("/skills/get-all-skills"),
   createSkill: (data: FormData) =>
@@ -143,4 +131,19 @@ export const porjectAPI = {
     }),
 
   deleteProject: (id: string) => api.delete(`/projects/delete-project/${id}`),
+};
+
+export const techStackAPI = {
+  // Tech Stack
+  getTechStack: () => api.get("/techstack/get-all-tech"),
+  getTechStackById: (id: string) => api.get(`/techstack/get-tech-by-id/${id}`),
+  createTech: (data: FormData) =>
+    api.post("/techstack", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  updateTech: (id: string, data: FormData) =>
+    api.patch(`/techstack/update-tech/${id}`, data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  deleteTech: (id: string) => api.delete(`/techstack/delete-tech/${id}`),
 };

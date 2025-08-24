@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { profileAPI, contentAPI ,porjectAPI} from "@/lib/api";
+import { profileAPI, contentAPI, porjectAPI, techStackAPI } from "@/lib/api";
 
 export function useProjects() {
   return useQuery({
@@ -27,7 +27,7 @@ export function useTechStack() {
   return useQuery({
     queryKey: ["techstack"],
     queryFn: async () => {
-      const response = await contentAPI.getTechStack();
+      const response = await techStackAPI.getTechStack();
       return response.data;
     },
   });

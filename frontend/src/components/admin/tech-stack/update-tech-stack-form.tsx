@@ -13,20 +13,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, X, Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-interface CreateTechStackFormProps {
-  // No props needed for create form
+interface UpdateTechStackFormProps {
+  tech: any; // Required for update - must have existing tech data
 }
 
-export function CreateTechStackForm({}: CreateTechStackFormProps) {
+export function UpdateTechStackForm({ tech }: UpdateTechStackFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Only state for UI interactions (dynamic lists and file upload)
-  const [keypoints, setKeypoints] = useState<string[]>([]);
-  const [referenceWebsite, setReferenceWebsite] = useState<string[]>([]);
+  // Initialize state with existing tech data
+  const [keypoints, setKeypoints] = useState<string[]>(tech?.keypoints || []);
+  const [referenceWebsite, setReferenceWebsite] = useState<string[]>(
+    tech?.referenceWebsite || []
+  );
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [featured, setFeatured] = useState<boolean>(false);
+  const [featured, setFeatured] = useState<boolean>(tech?.featured || false);
 
   // Keypoint management
   const addKeypoint = (keypointText: string) => {
@@ -50,14 +52,14 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
     setReferenceWebsite((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Create mutation only
-  const createMutation = useMutation({
-    mutationFn: (data: FormData) => techStackAPI.createTech(data),
+  // Update mutation only
+  const updateMutation = useMutation({
+    mutationFn: (data: FormData) => techStackAPI.updateTech(tech._id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["techstack"] });
       toast({
         title: "Success",
-        description: "Technology created successfully",
+        description: "Technology updated successfully",
       });
       router.push("/admin/tech-stack");
     },
@@ -65,7 +67,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
       toast({
         title: "Error",
         description:
-          error.response?.data?.message || "Failed to create technology",
+          error.response?.data?.message || "Failed to update technology",
         variant: "destructive",
       });
     },
@@ -88,16 +90,6 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
       return;
     }
 
-    // For create form, image is required
-    if (!imageFile) {
-      toast({
-        title: "Validation Error",
-        description: "Technology icon/logo is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Create submission FormData
     const submitData = new FormData();
 
@@ -113,10 +105,12 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
     submitData.append("referenceWebsite", JSON.stringify(referenceWebsite));
     submitData.append("featured", featured.toString());
 
-    // Add required image file
-    submitData.append("imageUrl", imageFile);
+    // Add image if selected (for update, this is optional)
+    if (imageFile) {
+      submitData.append("imageUrl", imageFile);
+    }
 
-    createMutation.mutate(submitData);
+    updateMutation.mutate(submitData);
   };
 
   const handleKeypointKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -137,7 +131,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
     }
   };
 
-  const isLoading = createMutation.isPending;
+  const isLoading = updateMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -153,6 +147,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
               <Input
                 id="title"
                 name="title"
+                defaultValue={tech?.title || ""}
                 placeholder="e.g., React, Node.js, MongoDB"
                 disabled={isLoading}
                 required
@@ -164,7 +159,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
               <select
                 id="category"
                 name="category"
-                defaultValue="Other"
+                defaultValue={tech?.category || "Other"}
                 disabled={isLoading}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -185,7 +180,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
               <select
                 id="proficiencyLevel"
                 name="proficiencyLevel"
-                defaultValue="Intermediate"
+                defaultValue={tech?.proficiencyLevel || "Intermediate"}
                 disabled={isLoading}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -201,6 +196,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
               <Textarea
                 id="description"
                 name="description"
+                defaultValue={tech?.description || ""}
                 placeholder="Brief description of your experience with this technology"
                 rows={3}
                 disabled={isLoading}
@@ -221,7 +217,7 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
                 id="order"
                 name="order"
                 type="number"
-                defaultValue={0}
+                defaultValue={tech?.order || 0}
                 placeholder="0"
                 disabled={isLoading}
               />
@@ -238,34 +234,49 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="image">Technology Icon/Logo *</Label>
+              <Label htmlFor="image">Technology Icon/Logo</Label>
               <Input
                 id="image"
                 type="file"
                 accept="image/*"
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                 disabled={isLoading}
-                required
                 className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"
               />
-              {imageFile && (
-                <div className="flex items-center space-x-3 mt-2">
-                  <img
-                    src={URL.createObjectURL(imageFile)}
-                    alt="Selected file"
-                    className="w-12 h-12 object-cover rounded border"
-                  />
-                  <div>
-                    <p className="text-sm font-medium">Selected Image</p>
-                    <p className="text-xs text-muted-foreground">
-                      {imageFile.name}
-                    </p>
+              <div className="space-y-2">
+                {tech?.imageUrl && (
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={tech.imageUrl}
+                      alt={tech.title}
+                      className="w-12 h-12 object-cover rounded border"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">Current Image</p>
+                      <p className="text-xs text-muted-foreground">
+                        {imageFile
+                          ? "Will be replaced with new image"
+                          : "Keep current image"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Upload an icon or logo for this technology (required)
-              </p>
+                )}
+                {imageFile && (
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="New upload"
+                      className="w-12 h-12 object-cover rounded border"
+                    />
+                    <div>
+                      <p className="text-sm font-medium">New Image</p>
+                      <p className="text-xs text-muted-foreground">
+                        Will replace current image
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -407,10 +418,10 @@ export function CreateTechStackForm({}: CreateTechStackFormProps) {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating Technology...
+              Updating Technology...
             </>
           ) : (
-            "Create Technology"
+            "Update Technology"
           )}
         </Button>
       </div>
